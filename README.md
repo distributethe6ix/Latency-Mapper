@@ -1,9 +1,32 @@
 # 🌍 Latency Mapper
 
-A powerful, interactive network latency visualization tool that displays real-time ping measurements on a world map with animated connection arcs and historical graphs.
+<div align="center">
 
-![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+**A powerful, interactive network latency visualization tool with real-time ping measurements, animated world map, and beautiful data visualizations.**
+
+[![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GitHub](https://img.shields.io/github/stars/distributethe6ix/Latency-Mapper?style=social)](https://github.com/distributethe6ix/Latency-Mapper)
+
+[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Screenshots](#screenshots)
+
+</div>
+
+---
+
+## Quick Start
+
+Get up and running in 3 commands:
+
+```bash
+cd latency-mapper
+pip3 install -r requirements.txt
+sudo python3 web_interface.py --port 5001
+```
+
+Then open **http://localhost:5001** in your browser and click "🌍 Auto-Detect" to get started!
+
+📖 **[Full Setup Guide](GETTING_STARTED.md)** • 🚀 **[5-Minute Quick Start](QUICKSTART.md)**
 
 ## Features
 
@@ -13,7 +36,29 @@ A powerful, interactive network latency visualization tool that displays real-ti
 📊 **Historical Graphs** - Multiple chart types including line graphs, heatmaps, and statistics
 🎯 **Multiple Endpoints** - Monitor latency to multiple targets simultaneously
 🖱️ **Interactive Selection** - Web-based UI for easy endpoint management
-📈 **Real-Time Statistics** - Live updates of min/max/average latency
+📈 **BIG Latency Display** - 32px numbers in professional table layout
+🌍 **Auto-Location Detection** - One-click location via IP geolocation
+📍 **City Name Geocoding** - Type "Tokyo" → get coordinates automatically
+
+## Screenshots
+
+### Web Interface with Big Latency Table
+The redesigned UI features **32px latency numbers** in a professional table layout with color-coded values (green/yellow/orange/red) for instant performance assessment.
+
+### Interactive World Map
+Animated connection arcs show real-time latency between your location and multiple endpoints worldwide, with automatic updates every 10 seconds.
+
+### One-Click Location Detection
+Click "Auto-Detect" to automatically fill in your location via IP geolocation, or type any city name and get coordinates instantly.
+
+## Documentation
+
+- 📖 **[Getting Started](GETTING_STARTED.md)** - Zero to running in 5 minutes
+- 🚀 **[Quick Start](QUICKSTART.md)** - Fast reference guide
+- 📋 **[Setup From Scratch](SETUP_FROM_SCRATCH.md)** - Complete setup with city coordinates
+- 🔧 **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+- 🏗️ **[Architecture](ARCHITECTURE.md)** - Technical deep-dive
+- 🆕 **[What's New](WHATS_NEW.md)** - Latest updates and features
 
 ## Architecture
 
@@ -24,6 +69,8 @@ The application consists of several modular components:
 - **graph_plotter.py** - Historical data visualization with matplotlib
 - **web_interface.py** - Flask-based web server for interactive UI
 - **main.py** - CLI interface and demo mode
+- **geocode_helper.py** - City name to coordinates converter
+- **location_detector.py** - Auto-detect location via IP
 
 ## Installation
 
