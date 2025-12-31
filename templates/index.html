@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latency Mapper - Network Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .header-info {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 15px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.secondary {
+            background: #764ba2;
+        }
+
+        button.secondary:hover {
+            background: #64408a;
+        }
+
+        button.small {
+            font-size: 11px;
+            padding: 5px 10px;
+            margin-top: 4px;
+        }
+
+        .map-container {
+            height: 550px;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 6px;
+        }
+
+        /* BIG LATENCY TABLE */
+        .latency-table-container {
+            overflow-x: auto;
+        }
+
+        .latency-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .latency-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .latency-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .latency-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .latency-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .endpoint-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .endpoint-ip {
+            color: #999;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .latency-big {
+            font-size: 32px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+
+        .latency-green {
+            color: #28a745;
+        }
+
+        .latency-yellow {
+            color: #ffc107;
+        }
+
+        .latency-orange {
+            color: #ff7f00;
+        }
+
+        .latency-red {
+            color: #dc3545;
+        }
+
+        .latency-gray {
+            color: #999;
+        }
+
+        .stats-small {
+            font-size: 11px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .remove-btn:hover {
+            background: #c82333;
+        }
+
+        .alert {
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 11px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .quick-add {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .quick-add select {
+            margin-bottom: 6px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>🌍 Latency Mapper</h1>
+            </div>
+            <div class="header-info">
+                <code>sudo python3 web_interface.py --port 5001</code>
+            </div>
+        </header>
+
+        <div class="layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Source Configuration -->
+                <div class="panel">
+                    <h2>Source Location</h2>
+
+                    <button onclick="autoDetectLocation()" class="secondary">🌍 Auto-Detect</button>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Name (or city)</label>
+                        <input type="text" id="sourceName" placeholder="Tokyo or My Office">
+                        <button onclick="geocodeSource()" class="small">📍 Find Coords</button>
+                    </div>
+                    <div class="form-group">
+                        <label>IP/Hostname</label>
+                        <input type="text" id="sourceIP" placeholder="8.8.8.8" value="8.8.8.8">
+                    </div>
+                    <div class="form-group">
+                        <label>Latitude</label>
+                        <input type="number" id="sourceLat" step="0.0001" placeholder="37.7749">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude</label>
+                        <input type="number" id="sourceLon" step="0.0001" placeholder="-122.4194">
+                    </div>
+                    <button onclick="setSource()">Set Source</button>
+                </div>
+
+                <!-- Add Target -->
+                <div class="panel">
+                    <h2>Add Target</h2>
+
+                    <div class="quick-add">
+                        <label>Quick Add</label>
+                        <select id="commonEndpoint">
+                            <option value="">-- Select --</option>
+                        </select>
+                        <button onclick="addCommonEndpoint()" class="secondary small">Add</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Name (or city)</label>
+                        <input type="text" id="targetName" placeholder="London">
+                        <button onclick="geocodeTarget()" class="small">📍 Find Coords</button>
+                    </div>
+                    <div class="form-group">
+                        <label>IP/Hostname</label>
+                        <input type="text" id="targetIP" placeholder="1.1.1.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Latitude</label>
+                        <input type="number" id="targetLat" step="0.0001">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude</label>
+                        <input type="number" id="targetLon" step="0.0001">
+                    </div>
+                    <button onclick="addEndpoint()">Add Target</button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Map -->
+                <div class="panel">
+                    <h2>World Map</h2>
+                    <div class="map-container">
+                        <iframe id="mapFrame" src="/api/map/view"></iframe>
+                    </div>
+                </div>
+
+                <!-- Latency Table -->
+                <div class="panel">
+                    <h2>Live Latency Measurements</h2>
+                    <div class="latency-table-container">
+                        <table class="latency-table" id="latencyTable">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th style="text-align: center;">Current Latency</th>
+                                    <th style="text-align: center;">Avg</th>
+                                    <th style="text-align: center;">Min</th>
+                                    <th style="text-align: center;">Max</th>
+                                    <th style="text-align: center;">Success Rate</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="latencyTableBody">
+                                <tr>
+                                    <td colspan="7" class="no-data">
+                                        No endpoints added yet.<br>
+                                        Add targets from the sidebar to start monitoring.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let endpoints = {};
+        let commonEndpoints = {};
+
+        // Load common endpoints
+        fetch('/api/endpoints/common')
+            .then(r => r.json())
+            .then(data => {
+                commonEndpoints = data;
+                const select = document.getElementById('commonEndpoint');
+                for (const [key, ep] of Object.entries(data)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = ep.name;
+                    select.appendChild(option);
+                }
+            });
+
+        function autoDetectLocation() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🔄 Detecting...';
+
+            fetch('/api/location/detect')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('sourceName').value = `${data.city}, ${data.country}`;
+                        document.getElementById('sourceIP').value = data.ip;
+                        document.getElementById('sourceLat').value = data.lat;
+                        document.getElementById('sourceLon').value = data.lon;
+                        alert(`✓ Location: ${data.city}, ${data.country}`);
+                    } else {
+                        alert('Could not detect location: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Error: ' + err))
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.textContent = '🌍 Auto-Detect';
+                });
+        }
+
+        function geocodeSource() {
+            geocodeField('sourceName', 'sourceLat', 'sourceLon');
+        }
+
+        function geocodeTarget() {
+            geocodeField('targetName', 'targetLat', 'targetLon');
+        }
+
+        function geocodeField(nameId, latId, lonId) {
+            const locationName = document.getElementById(nameId).value;
+            if (!locationName) {
+                alert('Please enter a location name first');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🔄...';
+
+            fetch('/api/location/geocode', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({location: locationName})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(latId).value = data.lat;
+                    document.getElementById(lonId).value = data.lon;
+                    alert(`✓ Found: ${data.display_name}`);
+                } else {
+                    alert('Not found. Try: "Tokyo, Japan" or "London, UK"');
+                }
+            })
+            .catch(err => alert('Error: ' + err))
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = '📍 Find Coords';
+            });
+        }
+
+        function setSource() {
+            const data = {
+                name: document.getElementById('sourceName').value,
+                ip: document.getElementById('sourceIP').value,
+                lat: document.getElementById('sourceLat').value,
+                lon: document.getElementById('sourceLon').value
+            };
+
+            fetch('/api/source', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                alert('✓ Source location set!');
+                refreshMap();
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        function addCommonEndpoint() {
+            const key = document.getElementById('commonEndpoint').value;
+            if (!key) return;
+
+            const ep = commonEndpoints[key];
+            document.getElementById('targetName').value = ep.name;
+            document.getElementById('targetIP').value = ep.ip;
+            document.getElementById('targetLat').value = ep.lat;
+            document.getElementById('targetLon').value = ep.lon;
+
+            addEndpoint();
+        }
+
+        function addEndpoint() {
+            const data = {
+                name: document.getElementById('targetName').value,
+                ip: document.getElementById('targetIP').value,
+                lat: document.getElementById('targetLat').value,
+                lon: document.getElementById('targetLon').value
+            };
+
+            if (!data.name || !data.ip || !data.lat || !data.lon) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            fetch('/api/endpoints/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                endpoints[result.endpoint.id] = result.endpoint;
+                updateLatencyTable();
+                refreshMap();
+
+                // Clear form
+                document.getElementById('targetName').value = '';
+                document.getElementById('targetIP').value = '';
+                document.getElementById('targetLat').value = '';
+                document.getElementById('targetLon').value = '';
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        function removeEndpoint(id) {
+            if (!confirm('Remove this endpoint?')) return;
+
+            fetch('/api/endpoints/remove', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: id})
+            })
+            .then(r => r.json())
+            .then(() => {
+                delete endpoints[id];
+                updateLatencyTable();
+                refreshMap();
+            })
+            .catch(err => alert('Error: ' + err));
+        }
+
+        function getLatencyColor(latency) {
+            if (latency === null) return 'latency-gray';
+            if (latency < 50) return 'latency-green';
+            if (latency < 100) return 'latency-yellow';
+            if (latency < 200) return 'latency-orange';
+            return 'latency-red';
+        }
+
+        function updateLatencyTable() {
+            const tbody = document.getElementById('latencyTableBody');
+
+            if (Object.keys(endpoints).length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-data">
+                            No endpoints added yet.<br>
+                            Add targets from the sidebar to start monitoring.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Fetch current latency data
+            fetch('/api/latency/current')
+                .then(r => r.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+
+                    for (const [id, ep] of Object.entries(endpoints)) {
+                        const latencyData = data[id] || {current: null, stats: {}};
+                        const current = latencyData.current;
+                        const stats = latencyData.stats || {};
+
+                        const colorClass = getLatencyColor(current);
+                        const latencyText = current !== null ? current.toFixed(1) : 'FAIL';
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="endpoint-name">${ep.name}</div>
+                                <div class="endpoint-ip">${ep.ip}</div>
+                            </td>
+                            <td>
+                                <div class="latency-big ${colorClass}">${latencyText}</div>
+                                ${current !== null ? '<div style="text-align: center; font-size: 11px; color: #999;">ms</div>' : ''}
+                            </td>
+                            <td style="text-align: center; font-size: 18px; font-weight: 600;">
+                                ${stats.avg_latency ? stats.avg_latency.toFixed(1) : '--'}
+                                ${stats.avg_latency ? '<div class="stats-small">ms</div>' : ''}
+                            </td>
+                            <td style="text-align: center; font-size: 16px; color: #28a745;">
+                                ${stats.min_latency ? stats.min_latency.toFixed(1) : '--'}
+                            </td>
+                            <td style="text-align: center; font-size: 16px; color: #dc3545;">
+                                ${stats.max_latency ? stats.max_latency.toFixed(1) : '--'}
+                            </td>
+                            <td style="text-align: center; font-size: 16px;">
+                                ${stats.success_rate ? (stats.success_rate * 100).toFixed(0) + '%' : '--'}
+                            </td>
+                            <td style="text-align: center;">
+                                <button class="remove-btn" onclick="removeEndpoint('${id}')">Remove</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                });
+        }
+
+        function refreshMap() {
+            fetch('/api/map/generate', {method: 'POST'})
+                .then(r => r.json())
+                .then(() => {
+                    document.getElementById('mapFrame').src = '/api/map/view?t=' + Date.now();
+                });
+        }
+
+        // Auto-refresh latencies every 2 seconds
+        setInterval(updateLatencyTable, 2000);
+
+        // Auto-refresh map every 10 seconds
+        setInterval(refreshMap, 10000);
+
+        // Initial load
+        updateLatencyTable();
+    </script>
+</body>
+</html>
